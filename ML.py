@@ -62,10 +62,10 @@ print("R2_test_LR:",r2_test_LR)
 # R2 is 0.9989 Mse is 4.066 for DataCleaning. 
 # R2 is 0.9938 Mse is 23.47477 for DC2. 
 # R2 is 0.9482 Mse is 198.5 for DC3.
-# joblib.dump(model, "model_LR.pkl")
+joblib.dump(model, "model_LR.pkl")
 
 
-'''# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Decision Tree Regression
 dtr=DecisionTreeRegressor()
 dtr.fit(x_train,y_train)
@@ -127,4 +127,4 @@ print("r2_gb",r2_gb)
 # test:0.2
 # R2 is 0.9987 Mse is 4.8825 for DataCleaning. 
 # R2 is 0.9938 Mse is 23.4887 for DC2. 
-# R2 is 0.9479 Mse is 199.442 for DC3'''
+# R2 is 0.9479 Mse is 199.442 for DC3
