@@ -27,31 +27,33 @@ if option == "Manual":
     col1, col2 = st.columns(2)
 
     with col1:
-        UI_views = st.number_input("Views", min_value=0)
-        UI_likes = st.number_input("Likes", min_value=0)
-        UI_Comments = st.number_input("Comments", min_value=0)
+        UI_views = st.number_input("Views", min_value=1)
+        UI_likes = st.number_input("Likes", min_value=1,max_value=UI_views)
+        UI_Comments = st.number_input("Comments", min_value=1,max_value=UI_views)
         UI_Device = st.selectbox("Select Device:", ["Mobile", "TV", "Tablet"])
         UI_Category = st.selectbox("Select Category:", ["Entertainment",
                                                        "Gaming", "Lifestyle",
                                                        "Music", "Tech"])
 
     with col2:
-        UI_watch_time_minutes = st.number_input("watch_time_minutes", min_value=0.0)
         UI_video_length_minutes = st.number_input("video_length_minutes", min_value=1.0)
+        UI_watch_time_minutes = st.number_input("watch_time_minutes", min_value=1.0,max_value=UI_video_length_minutes*UI_views)
         UI_subscribers = st.number_input("subscribers", min_value=10000)
         UI_Country = st.selectbox("Select Country:", ["CA", "DE", "IN", "UK", "US"])
 
     # Derived feature
     watch_fraction = (UI_watch_time_minutes / UI_views) / UI_video_length_minutes if UI_views > 0 else 0
+    engagement_rate=UI_views/(UI_likes+UI_Comments)
+
 
     # Match training features
     Scalar_key_list = ["views", "likes", "comments",
                        "watch_time_minutes", "video_length_minutes",
-                       "subscribers", "watch_fraction"]
+                       "subscribers", "watch_fraction","engagement_rate"]
 
     Scalar_Value_list = [UI_views, UI_likes, UI_Comments,
                          UI_watch_time_minutes, UI_video_length_minutes,
-                         UI_subscribers, watch_fraction]
+                         UI_subscribers, watch_fraction, engagement_rate]
 
     # Build single-row DataFrame
     input_df = pd.DataFrame([dict(zip(Scalar_key_list, Scalar_Value_list))])
@@ -60,9 +62,9 @@ if option == "Manual":
     # Scale using previously fitted scaler
     scaled_input = scaler.transform(input_df)
     scaled_df=pd.DataFrame()
-    scaled_df[X.keys()[:7]]=scaled_input
+    scaled_df[X.keys()[:8]]=scaled_input
 
-    ohe_data = pd.DataFrame(np.zeros((1, len(X.keys()[7:]))), columns=X.keys()[7:])
+    ohe_data = pd.DataFrame(np.zeros((1, len(X.keys()[8:]))), columns=X.keys()[8:])
     ohe_data[f"country_{UI_Country}"]=1
     ohe_data[f"device_{UI_Device}"]=1
     ohe_data[f"category_{UI_Category}"]=1
@@ -84,38 +86,30 @@ if option == "Manual":
                     time.sleep(3)
                 with st.spinner("Almost there! Preparing your big surprise ✨"):
                     time.sleep(3)
-                st.success(f"✅ Estimated Revenue: ${round(prediction[0][0],2)}")
+                if UI_Country=="CA":
+                    st.success(f"✅ Estimated Revenue: CA$ {round(prediction[0][0]*1.39,2)}")
+                elif UI_Country=="DE":
+                    st.success(f"✅ Estimated Revenue: € {round(prediction[0][0]*0.85,2)}")
+                elif UI_Country=="IN":
+                    st.success(f"✅ Estimated Revenue: ₹ {round(prediction[0][0]*88.77,2)}")
+                elif UI_Country=="UK":
+                    st.success(f"✅ Estimated Revenue: £ {round(prediction[0][0]*0.74,2)}")
+                else:
+                    st.success(f"✅ Estimated Revenue: $ {round(prediction[0][0],2)}")
 
             else:
                 with st.spinner("Calculating... Please wait ⏳"):
                     time.sleep(3)
-                st.success(f"✅ Estimated Revenue: ${round(prediction[0][0],2)}")
-
-
-
-    st.markdown("""
-    <style>
-    .my-button {
-        background-color: #FF4B4B;  /* Button color */
-        color: white;               /* Text color */
-        border-radius: 10px;        /* Rounded corners */
-        padding: 10px 20px;         /* Size */
-        font-weight: bold;
-    }
-    .my-button:hover {
-        background-color: #FF0000; /* Hover color */
-        color: white;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # Button with custom class
-    if st.button("Predict", key="predict"):
-        st.success("Prediction started!")
-
-    # Using HTML button
-    st.markdown('<button class="my-button">Predict</button>', unsafe_allow_html=True)
-
+                if UI_Country=="CA":
+                    st.success(f"✅ Estimated Revenue: CA$ {round(prediction[0][0]*1.39,2)}")
+                elif UI_Country=="DE":
+                    st.success(f"✅ Estimated Revenue: € {round(prediction[0][0]*0.85,2)}")
+                elif UI_Country=="IN":
+                    st.success(f"✅ Estimated Revenue: ₹ {round(prediction[0][0]*88.77,2)}")
+                elif UI_Country=="UK":
+                    st.success(f"✅ Estimated Revenue: £ {round(prediction[0][0]*0.74,2)}")
+                else:
+                    st.success(f"✅ Estimated Revenue: $ {round(prediction[0][0],2)}")
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -180,6 +174,7 @@ def get_youtube_video_data(youtube_url, api_key):
 def predit(input_url,api_key):
     video_data,Loc = get_youtube_video_data(input_url, api_key)
     video_data["watch_fraction"] = (video_data["watch_time_minutes"] / video_data["views"]) / video_data["video_length_minutes"] if video_data["views"] > 0 else 0
+    video_data["engagement_rate"]=video_data["views"]/(video_data["likes"]+video_data["comments"])
     video_data["watch_time_minutes"]=((video_data["views"]*video_data["video_length_minutes"])*0.90)*0.66
     video_data_p1=pd.DataFrame([video_data])
     video_data["watch_time_minutes"]=((video_data["views"]*video_data["video_length_minutes"])*0.33)*0.66
@@ -196,14 +191,14 @@ def predit(input_url,api_key):
     scaled_df2=pd.DataFrame()
     scaled_df2[video_data_p2.keys()]=scaled_input_p2
 
-    ohe_data = pd.DataFrame(np.zeros((1, len(X.keys()[7:]))), columns=X.keys()[7:])
+    ohe_data = pd.DataFrame(np.zeros((1, len(X.keys()[8:]))), columns=X.keys()[8:])
     ohe_data[f"country_{Loc}"]=1
     predict_data=pd.concat([scaled_df1, ohe_data], axis=1)
 
     model=joblib.load("model_LR.pkl")
     prediction1= model.predict(predict_data)
 
-    ohe_data = pd.DataFrame(np.zeros((1, len(X.keys()[7:]))), columns=X.keys()[7:])
+    ohe_data = pd.DataFrame(np.zeros((1, len(X.keys()[8:]))), columns=X.keys()[8:])
     ohe_data[f"country_{Loc}"]=1
     predict_data=pd.concat([scaled_df2, ohe_data], axis=1)
 
@@ -212,7 +207,7 @@ def predit(input_url,api_key):
 
 if option == "Using Youtube Link":
     input_url=st.text_input("Paste the URL","https://youtu.be/bFwI1SJcMo0?si=bN2UVEN4LJQ-izx-")
-    api_key = "Your API Key"
+    api_key = "AIzaSyCY3zWI6se-bKfql50MrWIXZiKohNo1Ao4"
     prediction1,prediction2,video_data=predit(input_url,api_key)
     VIDEO_URL = input_url
     st.video(VIDEO_URL)
@@ -226,12 +221,12 @@ if option == "Using Youtube Link":
                     time.sleep(3)
                 with st.spinner("Almost there! Preparing your big surprise ✨"):
                     time.sleep(3)
-                st.success(f"✅ Estimated Revenue: {round(prediction2[0][0],2)} to {round(prediction1[0][0],2)}")
+                st.success(f"✅ Estimated Revenue: {round(prediction2[0][0],2)} to {round(prediction1[0][0],2)} USD")
 
             else:
                 with st.spinner("Calculating... Please wait ⏳"):
                     time.sleep(3)
-                st.success(f"✅ Estimated Revenue: {round(prediction2[0][0],2)} to {round(prediction1[0][0],2)}")
+                st.success(f"✅ Estimated Revenue: {round(prediction2[0][0],2)} to {round(prediction1[0][0],2)} USD")
         else:
             with st.spinner("Calculating... Please wait ⏳"):
                 time.sleep(1)
