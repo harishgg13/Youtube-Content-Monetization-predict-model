@@ -207,7 +207,7 @@ def predit(input_url,api_key):
 
 if option == "Using Youtube Link":
     input_url=st.text_input("Paste the URL","https://youtu.be/bFwI1SJcMo0?si=bN2UVEN4LJQ-izx-")
-    api_key = "AIzaSyCY3zWI6se-bKfql50MrWIXZiKohNo1Ao4"
+    api_key = "YOUR_API_KEY"
     prediction1,prediction2,video_data=predit(input_url,api_key)
     VIDEO_URL = input_url
     st.video(VIDEO_URL)
